@@ -10,8 +10,6 @@ int getNumberOfElements(FILE *file);
 
 char *getRunFileName(const char *inputFileName, int run);
 
-int isSorted(int *pInt, int n);
-
 void mergeRuns(int startRun, int endRun, FILE *outFile, const char *runFilePrefix, int *outBuffer, int *inBuffer, int mergeRuns);
 
 char *getSuperRunPrefix(const char *inputFileName) ;
@@ -21,22 +19,15 @@ void multiStepMerge(FILE *out, const char *inputFileName, int *outBuffer, int *i
 int replacementSelect(int *inputBuffer, int *outBuffer, FILE *fp, FILE *runFile, int *remainingElements, int *bIndex,
                       int *bSize);
 
-void swap(int *array, int i, int j);
-
 int main(int argc, char *argv[]){
     FILE *fp;
     FILE *out;
-    FILE *out2;
     FILE *runFile;
-    char *outFileName;
-    char *outFileName2 = "sort1.bin";
-    char *inputFileName;
-    char *sortMethod;
-    int outBuffer[1000];
-    int inBuffer[1000];
+    char *outFileName, *inputFileName, *sortMethod;
+    int outBuffer[1000], inBuffer[1000];
     struct timeval startTime, endTime, execTime;
     int runFileNumber;
-    if(argc != 5){
+    if(argc != 4){
         printf("Enter Correct number of arguments, Usage: assn_3 --basic input.bin sort.bin");
         exit(0);
     }
@@ -44,19 +35,13 @@ int main(int argc, char *argv[]){
     sortMethod = argv[1];
     inputFileName = argv[2];
     outFileName = argv[3];
-//    Test
-    outFileName2 = argv[4];
-//    Test
     fp = fopen(inputFileName, "r+b");
     int numberOfElements = getNumberOfElements(fp);
 
     gettimeofday(&startTime, NULL);
-
     int remainingElements = numberOfElements;
     int runs = (int) ceil((double)numberOfElements / 1000);
-    printf("%d------%d--------", numberOfElements, runs);
     out = fopen(outFileName, "w+b");
-
     if(remainingElements < 1000){
         fread(inBuffer, sizeof( int ), remainingElements, fp);
         qsort(inBuffer, remainingElements, sizeof(int), comparator);
@@ -89,7 +74,7 @@ int main(int argc, char *argv[]){
                 multiStepMerge(out, inputFileName, outBuffer, inBuffer, runs);
             } else {
                 printf("Incorrect Sort Method");
-                exit(0);
+                exit(1);
             }
         } else {
             if (remainingElements >= 1000) {
@@ -116,45 +101,22 @@ int main(int argc, char *argv[]){
                 fclose(runFile);
                 runFileNumber++;
             }
-            printf("\nRuns: %d\n", runFileNumber);
             fclose(fp);
             mergeRuns(0, runFileNumber-1, out, inputFileName, outBuffer, inBuffer, runs);
         }
     }
     fclose(out);
     gettimeofday(&endTime, NULL);
-
-//    Debug
-    out = fopen(outFileName, "rb");
-    out2 = fopen(outFileName2, "rb");
-    int count = 0;
-    int sorted[numberOfElements];
-    int sorted2[numberOfElements];
-    fseek(out, 0, SEEK_SET);
-    fseek(out2, 0, SEEK_SET);
-    fread(sorted, sizeof(int), numberOfElements, out);
-    printf("\n%d\n", isSorted(sorted, numberOfElements));
-    fread(sorted2, sizeof(int), numberOfElements, out2);
-    printf("Number of elements: %d\n", getNumberOfElements(out));
-    printf("%d\n", isSorted(sorted2, numberOfElements));
-    int l;
-    for (l = 0; l < numberOfElements; ++l) {
-//        printf("%d\n", sorted[l]);
-        if(sorted[l] != sorted2[l]){
-//            printf("%d != %d\n", sorted[l], sorted2[l]);
-            count++;
-        }
-    }
-    printf("count: %d\n", count);
-    if(count!= 0){
-        return 1;
-    }
-//    Debug
-
-    fclose(out);
     timersub(&endTime, &startTime, &execTime);
     printf("Time: %ld.%06ld\n", execTime.tv_sec, (long) execTime.tv_usec);
     return 0;
+}
+
+void swap( int *array, int i, int j) {
+    int temp;
+    temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
 }
 
 void sift(int *array, int index, int n) {
@@ -234,13 +196,6 @@ int replacementSelect(int *inputBuffer, int *outBuffer, FILE *fp, FILE *runFile,
     return pIndex;
 }
 
-void swap( int *array, int i, int j) {
-    int temp;
-    temp = array[i];
-    array[i] = array[j];
-    array[j] = temp;
-}
-
 void multiStepMerge(FILE *out, const char *inputFileName, int *outBuffer, int *inBuffer, int runs) {
     int i;
     int superRuns = (int) ceil((double)runs / 15);
@@ -258,7 +213,7 @@ void multiStepMerge(FILE *out, const char *inputFileName, int *outBuffer, int *i
 }
 
 void mergeRuns(int startRun, int endRun, FILE *outFile, const char *runFilePrefix, int *outBuffer, int *inBuffer, int mergeRuns) {
-    int i,j,k,l;
+    int i,j,l;
     FILE *runFiles[endRun - startRun + 1];
     int numberOfKeys = (int) floor(1000 / (endRun - startRun + 1));
     int runFileSize[endRun - startRun + 1];
@@ -324,17 +279,6 @@ void mergeRuns(int startRun, int endRun, FILE *outFile, const char *runFilePrefi
     for (l = startRun; l <= endRun; l++) {
         fclose(runFiles[l - startRun]);
     }
-}
-
-int isSorted(int *pInt, int n) {
-    int i;
-    for (i = 0; i < n-1; ++i) {
-        if(pInt[i] > pInt[i + 1]){
-//            printf("%d - %d ---- %d - %d\n", pInt[i], pInt[i+1], i, i+1);
-            return 1;
-        }
-    }
-    return 0;
 }
 
 char *getRunFileName(const char *inputFileName, int run) {
