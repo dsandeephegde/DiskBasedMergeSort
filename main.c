@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
         fread(inBuffer, sizeof( int ), remainingElements, fp);
         qsort(inBuffer, remainingElements, sizeof(int), comparator);
         fwrite(inBuffer, sizeof(int), remainingElements, out);
-        fclose(out);
+        fclose(fp);
     } else {
         if (strcmp(sortMethod, "--replacement") != 0) {
             runFileNumber = 0;

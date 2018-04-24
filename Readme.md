@@ -60,3 +60,13 @@ cc main.c
 Example: 
 
 `./a.out --multistep input.bin sort.bin`
+
+#### Test cases
+
+Test cases can be run by following command
+
+`sh test.sh sizeOfInput`
+
+Example: 
+
+`sh test.sh 30000`
